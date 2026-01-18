@@ -24,9 +24,14 @@ const PropertiesFeaturedSlider = () => {
   // Fetch properties
   useEffect(() => {
     propertyService
-      .getAllProperties("", 1, 100, "true")
-      .then((res) => setProperties(res.data || []));
+      .fetchProperties({
+        featured: "true",
+        limit: "100",
+      })
+      .then(setProperties)
+      .catch(console.error);
   }, []);
+
 
   // Featured properties logic
   const parentFeatured = properties.filter(
@@ -98,12 +103,12 @@ const PropertiesFeaturedSlider = () => {
   const normalizeImages = (imgs: any[] = []): string[] =>
     Array.isArray(imgs) && imgs.length > 0
       ? imgs
-          .map((img) => {
-            if (typeof img === "string") return img;
-            if (typeof img === "object" && img && "url" in img) return img.url;
-            return undefined;
-          })
-          .filter((img): img is string => Boolean(img))
+        .map((img) => {
+          if (typeof img === "string") return img;
+          if (typeof img === "object" && img && "url" in img) return img.url;
+          return undefined;
+        })
+        .filter((img): img is string => Boolean(img))
       : [];
 
   const settings = {
@@ -179,13 +184,16 @@ const PropertiesFeaturedSlider = () => {
                           <IoLocationOutline />{" "}
                           <span>
                             {Array.isArray(property.location)
-                              ? property.location[0].length > 15
+                              ? property.location[0]?.length > 15
                                 ? property.location[0].substring(0, 15) + "..."
                                 : property.location[0]
-                              : typeof property.location === "string" && property.location.length > 15
-                              ? property.location.substring(0, 15) + "..."
-                              : property.location}
+                              : typeof property.location === "string"
+                                ? property.location.length > 15
+                                  ? property.location.substring(0, 15) + "..."
+                                  : property.location
+                                : ""}
                           </span>
+
                         </p>
                         <div className="flex justify-between items-center mt-auto text-blue-500 font-medium">
                           <p className="flex items-center capitalize lg:text-[0.9rem] md:text-[0.8rem] text-[0.8rem] lg:leading-5 md:leading-[1.1rem] leading-4 gap-x-2">

@@ -17,15 +17,17 @@ const PropertyDetails: React.FC = () => {
   const [childImages, setChildImages] = useState<string[]>([]);
   const [childLoading, setChildLoading] = useState(false);
   const params = useParams();
-  const name =
-    typeof params?.name === "string"
-      ? params.name
-      : Array.isArray(params?.name)
-      ? params.name[0]
-      : "";
-  const displayName = name
-    .replace(/-/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+  console.log("Params:", params)
+  const slug = params?.name || ""
+  // const name =
+  //   typeof params?.name === "string"
+  //     ? params.name
+  //     : Array.isArray(params?.name)
+  //     ? params.name[0]
+  //     : "";
+  // const displayName = name
+  //   .replace(/-/g, " ")
+  //   .replace(/\b\w/g, (c) => c.toUpperCase());
   const { isDarkMode } = useTheme();
   const [property, setProperty] = useState<Property | null>(null);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -36,57 +38,53 @@ const PropertyDetails: React.FC = () => {
   const [propertyId, setPropertyId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!name) return;
+    if (!slug) return;
     // Call API for parent data based on transformed property name
     const fetchData = async () => {
       try {
-        const res = await propertyService.getAllProperties(
-          displayName,
-          1,
-          1,
-          "true",
-          "false"
+        const res = await propertyService.fetchPropertyBySlug(
+          slug
         );
-        let parent = res?.data?.[0] || null;
+        // let parent = res?.data?.[0] || null;
         // Patch missing required fields for Property type
-        if (parent) {
-          parent = {
-            ...parent,
-            builderName: parent.builderName ?? "",
-            projectName: parent.projectName ?? "",
-            description: parent.description ?? "",
-            location: parent.location ?? "",
-            nearby: parent.nearby ?? [],
-            amenities: parent.amenities ?? [],
-            projectHighlights: parent.projectHighlights ?? [],
-            status: parent.status ?? [],
-            price: parent.price ?? "",
-            minPrice: typeof parent.minPrice === "number" ? parent.minPrice : 0,
-            minSize: parent.minSize ?? "",
-            maxSize: parent.maxSize ?? "",
-            sizeUnit: parent.sizeUnit ?? "",
-            images: parent.images ?? [],
-            mapLocation: parent.mapLocation ?? undefined,
-          };
-        }
-        setProperty(parent);
-        setPropertyId(parent?._id || null);
+        // if (parent) {
+          // parent = {
+          //   ...parent,
+          //   builderName: parent.builderName ?? "",
+          //   projectName: parent.projectName ?? "",
+          //   description: parent.description ?? "",
+          //   location: parent.location ?? "",
+          //   nearby: parent.nearby ?? [],
+          //   amenities: parent.amenities ?? [],
+          //   projectHighlights: parent.projectHighlights ?? [],
+          //   status: parent.status ?? [],
+          //   price: parent.price ?? "",
+          //   minPrice: typeof parent.minPrice === "number" ? parent.minPrice : 0,
+          //   minSize: parent.minSize ?? "",
+          //   maxSize: parent.maxSize ?? "",
+          //   sizeUnit: parent.sizeUnit ?? "",
+          //   images: parent.images ?? [],
+          //   mapLocation: parent.mapLocation ?? undefined,
+          // };
+        // }
+        // setProperty(parent);
+        // setPropertyId(parent?._id || null);
         // Always fetch sub-properties from backend by parentId to ensure only direct children are shown
-        if (parent?._id) {
-          try {
-            const subRes = await propertyService.getSubProperties(parent._id);
-            // Filter to only those whose parentId matches parent._id (should already be the case, but for safety)
-            const filtered = (subRes?.data || []).filter(
-              (sp: any) =>
-                sp.parentId === parent._id || sp.parentId === parent?._id
-            );
-            setSubProperties(filtered);
-          } catch (subErr) {
-            setSubProperties([]);
-          }
-        } else {
-          setSubProperties([]);
-        }
+        // if (parent?._id) {
+        //   try {
+        //     const subRes = await propertyService.getSubProperties(parent._id);
+        //     // Filter to only those whose parentId matches parent._id (should already be the case, but for safety)
+        //     const filtered = (subRes?.data || []).filter(
+        //       (sp: any) =>
+        //         sp.parentId === parent._id || sp.parentId === parent?._id
+        //     );
+        //     setSubProperties(filtered);
+        //   } catch (subErr) {
+        //     setSubProperties([]);
+        //   }
+        // } else {
+        //   setSubProperties([]);
+        // }
       } catch (err) {
         setProperty(null);
         setSubProperties([]);
@@ -94,7 +92,7 @@ const PropertyDetails: React.FC = () => {
       }
     };
     fetchData();
-  }, [name]);
+  }, [slug]);
 
   if (!property) {
     return <div>Loading...</div>;

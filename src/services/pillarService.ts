@@ -1,32 +1,25 @@
-import axios from "axios";
-
-export type ProfileImage = string | { url: string; [key: string]: any };
-export interface PillarMember {
-  _id: string;
-  name: string;
-  category: string;
-  profileImages?: ProfileImage[];
-  designation?: string;
-  about?: string;
-  experience?: string;
-  projects?: any[];
-  expertise?: any[];
-  skills?: any[];
-  isActive?: boolean;
-  isFeatured?: boolean;
-  image?: string;
-  position?: string;
-}
-
-export async function fetchPillarsByCategory(
-  category: string
-): Promise<PillarMember[]> {
+export async function fetchPillarsByCategory(category: string) {
   try {
-    const res = await axios.get(
-      `/api/pillar?category=${category}&isFeatured=true`
+    const res = await fetch(
+      `/api/v0/pillars?category=${encodeURIComponent(category)}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
     );
-    return res.data;
+
+    const result = await res.json();
+
+    if (!result.success) {
+      console.error("Pillars API error:", result.message);
+      return [];
+    }
+
+    return result.data || [];
   } catch (error) {
+    console.error("Failed to fetch pillars:", error);
     return [];
   }
 }

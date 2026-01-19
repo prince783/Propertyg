@@ -28,6 +28,8 @@ export type Property = {
   images?: { url: string }[] | string[];
 };
 
+const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3000/api/v0";
+
 export const propertyService = {
   // ✅ LIST PAGE (cards, featured, etc.)
   fetchProperties: async (params?: {
@@ -36,10 +38,10 @@ export const propertyService = {
     limit?: string;
   }): Promise<Property[]> => {
     try {
-      const { category = "", featured = "false", limit = "20" } = params || {};
+      const { category = "", featured = "false", limit = "12" } = params || {};
 
       const res = await axios.get(
-        `/api/v0/property?category=${category}&featured=${featured}&limit=${limit}`
+        `${BACKEND_URL}/public/property?featured=${featured}&limit=${limit}`
       );
 
       return Array.isArray(res.data?.data) ? res.data.data : [];
@@ -58,7 +60,7 @@ export const propertyService = {
 
     try {
       const res = await axios.get(
-        `/api/v0//property`,
+        `/api/v0/property`,
         {
           params: {
             slug,
@@ -85,3 +87,7 @@ export const propertyService = {
     }
   },
 };
+
+export const PropertyRoutes = {
+  GET_PUBLIC_PROPERTIES: `${BACKEND_URL}/public/property`
+}

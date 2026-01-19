@@ -3,6 +3,7 @@ import axios from "axios";
 export type Property = {
   _id: string;
 
+  builderName?: string;
   propertyName?: string;
   projectName?: string;
   description?: string;
@@ -12,13 +13,19 @@ export type Property = {
   parentId?: string | null;
   slug: string;
   price?: string;
+  minPrice?: number | string;
 
   minSize?: string;
   maxSize?: string;
   sizeUnit?: string;
 
   location?: string | string[];
-  images?: { url: string }[];
+  nearby?: string[];
+  amenities?: string[];
+  projectHighlights?: string[];
+  status?: string[];
+  mapLocation?: { lat: number; lng: number };
+  images?: { url: string }[] | string[];
 };
 
 export const propertyService = {
@@ -43,12 +50,26 @@ export const propertyService = {
   },
 
   // ✅ DETAILS PAGE (slug-based, FIXES sizeUnit/minSize issue)
-  fetchPropertyBySlug: async (slug: string): Promise<Property | null> => {
+ fetchPropertyBySlug: async (
+    slug: string,
+    withChildren = false
+  ): Promise<Property | null> => {
+    if (!slug) return null;
+
     try {
-      const res = await axios.get(`/api/v0/property/${encodeURIComponent(slug)}`);
-      return res.data?.data ?? null;
+      const res = await axios.get(
+        `/api/v0//property`,
+        {
+          params: {
+            slug,
+            withChildren,
+          },
+        }
+      );
+
+      return res.data?.success ? res.data.data : null;
     } catch (error) {
-      console.error("Property Slug Fetch Error:", error);
+      console.error("Website Slug Fetch Error:", error);
       return null;
     }
   },

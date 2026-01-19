@@ -17,19 +17,17 @@ const PropertyDetails: React.FC = () => {
   const [childImages, setChildImages] = useState<string[]>([]);
   const [childLoading, setChildLoading] = useState(false);
   const params = useParams();
-  console.log("Params:", params)
-  const slug = params?.name || ""
-  // const name =
-  //   typeof params?.name === "string"
-  //     ? params.name
-  //     : Array.isArray(params?.name)
-  //     ? params.name[0]
-  //     : "";
-  // const displayName = name
-  //   .replace(/-/g, " ")
-  //   .replace(/\b\w/g, (c) => c.toUpperCase());
+  const name =
+    typeof params?.name === "string"
+      ? params.name
+      : Array.isArray(params?.name)
+      ? params.name[0]
+      : "";
+  const displayName = name
+    .replace(/-/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
   const { isDarkMode } = useTheme();
-  const [property, setProperty] = useState<Property | null>(null);
+  const [property, setProperty] = useState<any | null>(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", email: "" });
@@ -38,53 +36,51 @@ const PropertyDetails: React.FC = () => {
   const [propertyId, setPropertyId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!slug) return;
-    // Call API for parent data based on transformed property name
+    if (!name) return;
+    // Call API for parent data based on property slug
     const fetchData = async () => {
       try {
-        const res = await propertyService.fetchPropertyBySlug(
-          slug
-        );
-        // let parent = res?.data?.[0] || null;
+        let parent: any = await propertyService.fetchPropertyBySlug(name);
+        
         // Patch missing required fields for Property type
-        // if (parent) {
-          // parent = {
-          //   ...parent,
-          //   builderName: parent.builderName ?? "",
-          //   projectName: parent.projectName ?? "",
-          //   description: parent.description ?? "",
-          //   location: parent.location ?? "",
-          //   nearby: parent.nearby ?? [],
-          //   amenities: parent.amenities ?? [],
-          //   projectHighlights: parent.projectHighlights ?? [],
-          //   status: parent.status ?? [],
-          //   price: parent.price ?? "",
-          //   minPrice: typeof parent.minPrice === "number" ? parent.minPrice : 0,
-          //   minSize: parent.minSize ?? "",
-          //   maxSize: parent.maxSize ?? "",
-          //   sizeUnit: parent.sizeUnit ?? "",
-          //   images: parent.images ?? [],
-          //   mapLocation: parent.mapLocation ?? undefined,
-          // };
-        // }
-        // setProperty(parent);
-        // setPropertyId(parent?._id || null);
+        if (parent) {
+          parent = {
+            ...parent,
+            builderName: parent.builderName ?? "",
+            projectName: parent.projectName ?? "",
+            description: parent.description ?? "",
+            location: parent.location ?? "",
+            nearby: parent.nearby ?? [],
+            amenities: parent.amenities ?? [],
+            projectHighlights: parent.projectHighlights ?? [],
+            status: parent.status ?? [],
+            price: parent.price ?? "",
+            minPrice: typeof parent.minPrice === "number" ? parent.minPrice : 0,
+            minSize: parent.minSize ?? "",
+            maxSize: parent.maxSize ?? "",
+            sizeUnit: parent.sizeUnit ?? "",
+            images: parent.images ?? [],
+            mapLocation: parent.mapLocation ?? undefined,
+          };
+        }
+        setProperty(parent);
+        setPropertyId(parent?._id || null);
         // Always fetch sub-properties from backend by parentId to ensure only direct children are shown
-        // if (parent?._id) {
-        //   try {
-        //     const subRes = await propertyService.getSubProperties(parent._id);
-        //     // Filter to only those whose parentId matches parent._id (should already be the case, but for safety)
-        //     const filtered = (subRes?.data || []).filter(
-        //       (sp: any) =>
-        //         sp.parentId === parent._id || sp.parentId === parent?._id
-        //     );
-        //     setSubProperties(filtered);
-        //   } catch (subErr) {
-        //     setSubProperties([]);
-        //   }
-        // } else {
-        //   setSubProperties([]);
-        // }
+        if (parent?._id) {
+          try {
+            const subRes = await propertyService.getSubProperties(parent._id);
+            // Filter to only those whose parentId matches parent._id (should already be the case, but for safety)
+            const filtered = (subRes?.data || []).filter(
+              (sp: any) =>
+                sp.parentId === parent._id || sp.parentId === parent?._id
+            );
+            setSubProperties(filtered);
+          } catch (subErr) {
+            setSubProperties([]);
+          }
+        } else {
+          setSubProperties([]);
+        }
       } catch (err) {
         setProperty(null);
         setSubProperties([]);
@@ -92,7 +88,7 @@ const PropertyDetails: React.FC = () => {
       }
     };
     fetchData();
-  }, [slug]);
+  }, [name, displayName]);
 
   if (!property) {
     return <div>Loading...</div>;
@@ -589,7 +585,7 @@ const PropertyDetails: React.FC = () => {
             >
               {Array.isArray(property.location) ? (
                 <ul className="grid grid-cols-2 gap-2">
-                  {(property.location || []).map((location, index) => (
+                  {(property.location || []).map((location: any, index: number) => (
                     <li key={index} className="flex items-center">
                       <span className="mr-2">•</span> {location}
                     </li>
@@ -616,13 +612,17 @@ const PropertyDetails: React.FC = () => {
                 isDarkMode ? "text-white " : "text-black"
               }`}
             >
-              <ul className="grid grid-cols-2 gap-2">
-                {(property.nearby || []).map((nearby, index) => (
-                  <li key={index} className="flex items-center">
-                    <span className="mr-2">•</span> {nearby}
-                  </li>
-                ))}
-              </ul>
+              {property?.nearby?.length > 0 ? (
+                <ul className="grid grid-cols-2 gap-2">
+                  {property.nearby.map((nearby: any, index: number) => (
+                    <li key={index} className="flex items-center">
+                      <span className="mr-2">•</span> {nearby}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No nearby locations available</p>
+              )}
             </div>
           </div>
           {/* Amenities */}
@@ -641,13 +641,17 @@ const PropertyDetails: React.FC = () => {
                 isDarkMode ? "text-white " : "text-black"
               }`}
             >
-              <ul className="grid grid-cols-2 gap-2">
-                {(property.amenities || []).map((amenitie, index) => (
-                  <li key={index} className="flex items-center">
-                    <span className="mr-2">•</span> {amenitie}
-                  </li>
-                ))}
-              </ul>
+              {property?.amenities?.length > 0 ? (
+                <ul className="grid grid-cols-2 gap-2">
+                  {property.amenities.map((amenitie: any, index: number) => (
+                    <li key={index} className="flex items-center">
+                      <span className="mr-2">•</span> {amenitie}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No amenities available</p>
+              )}
             </div>
           </div>
           {/* Project Highlights */}
@@ -666,15 +670,19 @@ const PropertyDetails: React.FC = () => {
                 isDarkMode ? "text-white " : "text-black"
               }`}
             >
-              <ul className="grid grid-cols-2 gap-2">
-                {(property.projectHighlights || []).map(
-                  (projectHighlight, index) => (
-                    <li key={index} className="flex items-center">
-                      <span className="mr-2">•</span> {projectHighlight}
-                    </li>
-                  )
-                )}
-              </ul>
+              {property?.projectHighlights?.length > 0 ? (
+                <ul className="grid grid-cols-2 gap-2">
+                  {property.projectHighlights.map(
+                    (projectHighlight: any, index: number) => (
+                      <li key={index} className="flex items-center">
+                        <span className="mr-2">•</span> {projectHighlight}
+                      </li>
+                    )
+                  )}
+                </ul>
+              ) : (
+                <p>No project highlights available</p>
+              )}
             </div>
           </div>
           {/* Status */}
@@ -693,13 +701,17 @@ const PropertyDetails: React.FC = () => {
                 isDarkMode ? "text-white " : "text-black"
               }`}
             >
-              <ul className="grid grid-cols-2 gap-2">
-                {(property.status || []).map((statu, index) => (
-                  <li key={index} className="flex items-center">
-                    <span className="mr-2">•</span> {statu}
-                  </li>
-                ))}
-              </ul>
+              {property?.status?.length > 0 ? (
+                <ul className="grid grid-cols-2 gap-2">
+                  {property.status.map((statu: any, index: number) => (
+                    <li key={index} className="flex items-center">
+                      <span className="mr-2">•</span> {statu}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No status information available</p>
+              )}
             </div>
           </div>
           {/* Map */}

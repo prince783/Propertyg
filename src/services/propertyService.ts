@@ -1,4 +1,5 @@
 import axios from "axios";
+import api from "./api";
 
 export type Property = {
   _id: string;
@@ -40,8 +41,8 @@ export const propertyService = {
     try {
       const { category = "", featured = "false", limit = "12" } = params || {};
 
-      const res = await axios.get(
-        `${BACKEND_URL}/public/property?featured=${featured}&limit=${limit}`
+      const res = await api.get(
+        `/public/property?featured=${featured}&limit=${limit}`,
       );
 
       return Array.isArray(res.data?.data) ? res.data.data : [];
@@ -52,22 +53,19 @@ export const propertyService = {
   },
 
   // ✅ DETAILS PAGE (slug-based, FIXES sizeUnit/minSize issue)
- fetchPropertyBySlug: async (
+  fetchPropertyBySlug: async (
     slug: string,
-    withChildren = false
+    withChildren = false,
   ): Promise<Property | null> => {
     if (!slug) return null;
 
     try {
-      const res = await axios.get(
-        `/api/v0/property`,
-        {
-          params: {
-            slug,
-            withChildren,
-          },
-        }
-      );
+      const res = await axios.get(`${BACKEND_URL}/public/property`, {
+        params: {
+          slug,
+          withChildren,
+        },
+      });
 
       return res.data?.success ? res.data.data : null;
     } catch (error) {
@@ -87,7 +85,3 @@ export const propertyService = {
     }
   },
 };
-
-export const PropertyRoutes = {
-  GET_PUBLIC_PROPERTIES: `${BACKEND_URL}/public/property`
-}
